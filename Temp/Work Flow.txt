@@ -1,0 +1,7 @@
+find product - clickbank
+copy product website - httrack / html edit / save as index.html
+push to github - github desktop
+shorten url - bitly
+post to social media - tiktok, youtube, facebook, pintrest, find a new one..
+spend 1 week on social media to drive traffic
+repeat
