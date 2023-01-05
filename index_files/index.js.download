@@ -1,0 +1,91 @@
+function setCookie(name, value, days) {
+  var expires = "";
+  if (days) {
+    var date = new Date();
+    date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
+    expires = "; expires=" + date.toUTCString();
+  }
+  var isLocalhost = location.host.indexOf("localhost") !== -1;
+  var domain = isLocalhost
+    ? location.hostname
+    : window.location.hostname.split(".")[
+        window.location.hostname.split(".").length - 2
+      ] +
+      "." +
+      window.location.hostname.split(".")[
+        window.location.hostname.split(".").length - 1
+      ];
+  document.cookie =
+    name + "=" + (value || "") + expires + "; path=/;domain=" + domain;
+}
+function getCookie(name) {
+  var nameEQ = name + "=";
+  var ca = document.cookie.split(";");
+  for (var i = 0; i < ca.length; i++) {
+    var c = ca[i];
+    while (c.charAt(0) == " ") c = c.substring(1, c.length);
+    if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+  }
+  return null;
+}
+
+function parseQueryString(query) {
+  var vars = query.split("&");
+  var query_string = {};
+  for (var i = 0; i < vars.length; i++) {
+    var pair = vars[i].split("=");
+    var key = decodeURIComponent(pair[0]);
+    var value = decodeURIComponent(pair[1]);
+    // If first entry with this name
+    if (typeof query_string[key] === "undefined") {
+      query_string[key] = decodeURIComponent(value);
+      // If second entry with this name
+    } else if (typeof query_string[key] === "string") {
+      var arr = [query_string[key], decodeURIComponent(value)];
+      query_string[key] = arr;
+      // If third or later entry with this name
+    } else {
+      query_string[key].push(decodeURIComponent(value));
+    }
+  }
+  return query_string;
+}
+
+var COOKIE_KEY = "jasper_referral";
+var QUERY_PARAM = window.REFERRAL_KEY || "special";
+
+var existingCode = getCookie(COOKIE_KEY);
+var qs = location.href.split("?")[1]
+  ? parseQueryString(location.href.split("?")[1])
+  : {};
+var newCode = qs[QUERY_PARAM];
+
+if (!existingCode && newCode) {
+  setCookie(COOKIE_KEY, newCode, 30);
+  console.log("Tracking referral", newCode);
+
+  // track event to analytics
+  var timer = setInterval(function () {
+    if (!window.atlas || !window.atlas.track) return;
+    window.atlas.track("Referral link visited", {
+      referalId: newCode,
+    });
+    clearInterval(timer);
+  }, 20);
+}
+
+if (existingCode) console.log("Referred by", existingCode);
+
+// Cleanup the referralId from the url
+if (newCode) window.history.pushState(null, "", location.href.split("?")[0]);
+
+// HANDLE PROMO CODES
+var PROMO_COOKIE_KEY = "promoId";
+var PROMO_QUERY_PARAM = "p";
+var promoId = qs[PROMO_QUERY_PARAM];
+if (promoId) {
+  console.log("Cached promo code:", promoId);
+  setCookie(PROMO_COOKIE_KEY, promoId, 30);
+}
+
+//<script type="text/javascript" src="https://ref.jasper.ai/index.js" async></script>
